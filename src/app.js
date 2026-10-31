@@ -1,5 +1,6 @@
 const express = require('express');
 const { calculateTotal, sortByNewest } = require('./orders');
+const { applyDiscount } = require('./discounts');
 
 const app = express();
 app.use(express.json());
@@ -24,6 +25,18 @@ app.post('/orders/quote', (req, res) => {
     return res.status(400).json({ error: 'items must be a non-empty array' });
   }
   return res.json(calculateTotal(items));
+});
+
+app.post('/orders/discount', (req, res) => {
+  const { subtotal, code } = req.body || {};
+  if (typeof subtotal !== 'number' || subtotal < 0) {
+    return res.status(400).json({ error: 'subtotal must be a non-negative number' });
+  }
+  try {
+    return res.json(applyDiscount(subtotal, code));
+  } catch (err) {
+    return res.status(422).json({ error: err.message });
+  }
 });
 
 module.exports = app;
